@@ -218,7 +218,26 @@ async function run() {
         res.send(result);  
         })
 
-     
+         //update user role using patch
+        app.patch('/users/instructor/:id', async (req, res) => {
+           const id=req.params.id;
+        //    console.log(id);
+           const filter={_id: new ObjectId(id)};
+           const updateUser={
+            $set:{
+                role:'instructor'
+            }
+           }
+        const result=await  usersCollection.updateOne(filter,updateUser);
+        res.send(result);  
+        })
+
+
+               
+        
+
+
+//----------------------------------manage user related api   end----------------------
 
 
 
