@@ -49,8 +49,8 @@ async function run() {
         //....................code start...................
 
         //all collection
-        const classesCollection = client.db("CosMake").collection('classes');
        
+        const usersCollection = client.db("CosMake").collection('users');
 
 
 
@@ -76,7 +76,47 @@ async function run() {
 
 
 
-     
+        // //get specific user cart product
+        // app.get('/users', async (req, res) => {
+        //     const email = req.query.email;
+        //     console.log(email);
+        //     if (!email) {
+        //         res.send([]);
+        //     }
+        //     //find multiple document
+        //     const query = { email: email };
+        //     const result = await usersCollection.find(query).toArray();
+        //     res.send(result);
+        // })
+
+
+        // //get specific user cart product
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            console.log(email);
+        
+                if (!email) {
+                    res.send([]);
+                }
+                //find multiple document
+                const query = { email: email };
+                const result = await usersCollection.find(query).toArray();
+                res.send(result);
+            
+        })
+
+
+ 
+
+
+
+
+
+
+
+
+
+
 
 
         // Send a ping to confirm a successful connection
