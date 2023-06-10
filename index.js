@@ -46,10 +46,37 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
+        //....................code start...................
+
+        //all collection
+        const classesCollection = client.db("CosMake").collection('classes');
        
 
 
 
+
+        //create a user
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email };
+            const existingUser = await usersCollection.findOne(query);
+            if (existingUser) {
+                return res.send({ message: 'User already Exist' });
+            }
+            const result = await usersCollection.insertOne(user);
+            res.send(result);
+        })
+
+                //get all user
+                app.get('/users', async (req, res) => {
+                    const result = await usersCollection.find().toArray();
+                    res.send(result);
+                })
+
+
+
+
+     
 
 
         // Send a ping to confirm a successful connection
