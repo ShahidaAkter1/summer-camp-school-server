@@ -50,7 +50,7 @@ async function run() {
 
         //all collection
         const classesCollection = client.db("CosMake").collection('classes');
-       
+        const instructorCollection = client.db("CosMake").collection('instructors');
         const usersCollection = client.db("CosMake").collection('users');
 
 
@@ -191,6 +191,22 @@ async function run() {
 
 
 
+
+
+        //instructor related api
+
+        app.get('/instructors', async (req, res) => {
+            const result = await instructorCollection.find().toArray();
+            res.send(result);
+        })
+
+
+
+        
+
+
+
+        //...........end code ................
 
 
 
