@@ -203,6 +203,24 @@ async function run() {
 
 
         
+//----------------------------------manage user related api----------------------
+         //update user role using patch
+        app.patch('/users/admin/:id', async (req, res) => {
+           const id=req.params.id;
+        //    console.log(id);
+           const filter={_id: new ObjectId(id)};
+           const updateUser={
+            $set:{
+                role:'admin'
+            }
+           }
+        const result=await  usersCollection.updateOne(filter,updateUser);
+        res.send(result);  
+        })
+
+     
+
+
 
 
 
