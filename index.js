@@ -50,7 +50,7 @@ async function run() {
 
         //all collection
         const classesCollection = client.db("CosMake").collection('classes');
-      
+       
         const usersCollection = client.db("CosMake").collection('users');
 
 
@@ -163,7 +163,37 @@ async function run() {
 
         })
 
-       
+        //feedback update classes field
+        app.put('/classes/feedback/:id', async (req, res) => {
+            const id = req.params.id;
+            const newStatus=req.body;
+            // console.log(newStatus,id);
+            const filter={_id:new ObjectId(id)}//get specific data
+            const options={upsert:true}//if data exist
+
+            //set data
+            const updatedData={
+                $set:{
+                    feedback:newStatus.feedback
+                }
+                }
+                const result=await classesCollection.updateOne(filter,updatedData,options)
+                res.send(result);    
+
+        })
+
+
+ 
+
+
+
+//----------------------------------class   related api----------------------
+
+
+
+
+
+
 
 
         // Send a ping to confirm a successful connection
