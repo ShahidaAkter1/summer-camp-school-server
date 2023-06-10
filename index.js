@@ -49,7 +49,8 @@ async function run() {
         //....................code start...................
 
         //all collection
-       
+        const classesCollection = client.db("CosMake").collection('classes');
+        
         const usersCollection = client.db("CosMake").collection('users');
 
 
@@ -114,7 +115,36 @@ async function run() {
 
 
 
+//----------------------------------class user related api----------------------
+        //classes related api
+        app.get('/classes', async (req, res) => {
+            const result = await classesCollection.find().toArray();
+            res.send(result);
+        })
 
+        //add a class
+        app.post('/classes',async(req,res)=>{
+            const newClass=req.body;
+            console.log(newClass);
+            const result = await classesCollection.insertOne(newClass);
+            res.send(result);
+        })
+
+
+        app.get('/classes/email', async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            if (!email) {
+                res.send([]);
+            }
+                //find multiple document
+                const query = { email: email };
+                const result = await classesCollection.find(query).toArray();
+                res.send(result);       
+        })
+
+
+      
 
 
 
