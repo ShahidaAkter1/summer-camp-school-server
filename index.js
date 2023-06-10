@@ -233,7 +233,13 @@ async function run() {
         })
 
 
-               
+                //delete specific user from dashboard
+                app.delete('/users/admin/:id', async (req, res) => {
+                    const deletedId = req.params.id;
+                    const query = { _id: new ObjectId(deletedId) };
+                    const result = await usersCollection.deleteOne(query);
+                    res.send(result);
+                })
         
 
 
