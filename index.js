@@ -9,6 +9,7 @@ require('dotenv').config()
 
 
 
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 
 
 
@@ -20,6 +21,33 @@ const port = process.env.PORT || 5000;
 //middleware
 app.use(cors())
 app.use(express.json())
+
+
+
+// //verify jwt token
+// const verifyJWT=(req,res,next)=>{
+//     const authorization=req.headers.authorization;//user comes or not properly
+
+//     //if not come authorization header
+//     if(!authorization){
+//         //return with status and error message
+//         return res.status(401).send({error:true,message:'unauthorized access'});
+//     }
+
+//     //if come then get the token using split
+//     //bearer token
+//     const token=authorization.split(' ')[1];
+
+//     //then verify the token
+//     jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
+//         if(err){
+//             return res.status(401).send({error:true,message:'unauthorized access'});
+//         }
+//         req.decoded=decoded;
+//         next();
+//     })
+// }
+
 
 
 
@@ -52,6 +80,8 @@ async function run() {
         const classesCollection = client.db("CosMake").collection('classes');
         const instructorCollection = client.db("CosMake").collection('instructors');
         const usersCollection = client.db("CosMake").collection('users');
+        const cartsCollection = client.db("CosMake").collection('carts');
+        const paymentCollection = client.db("CosMake").collection('payments');
 
 
 
@@ -77,24 +107,13 @@ async function run() {
 
 
 
-        // //get specific user cart product
-        // app.get('/users', async (req, res) => {
-        //     const email = req.query.email;
-        //     console.log(email);
-        //     if (!email) {
-        //         res.send([]);
-        //     }
-        //     //find multiple document
-        //     const query = { email: email };
-        //     const result = await usersCollection.find(query).toArray();
-        //     res.send(result);
-        // })
+ 
 
 
         // //get specific user cart product
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email;
-            console.log(email);
+            // console.log(email);
         
                 if (!email) {
                     res.send([]);
@@ -108,7 +127,51 @@ async function run() {
 
 
  
+//----------------------------------cart related api----------------------
 
+        // add to cart collection
+        app.post('/carts', async (req, res) => {
+            const addClass = req.body;
+            //  console.log(addClass);
+
+             const query = { classId: addClass.classId,studentEmail:addClass.studentEmail };
+             const existingClass = await cartsCollection.findOne(query);
+             if (existingClass) {
+                 return res.send({ message: 'Class already Exist' });
+             }
+            const result = await cartsCollection.insertOne(addClass);
+            res.send(result);
+        })
+
+            //get specific user selected classes 
+            app.get('/carts', async (req, res) => {
+                const email = req.query.email;
+                // console.log( 'from cart ',email);
+
+                if (!email) {
+                    res.send([]);
+                }
+                    //find multiple document
+                    const query = { 
+                        studentEmail: email
+                     };
+                    const result = await cartsCollection.find(query).toArray();
+                    res.send(result);
+              
+            })
+
+
+         //delete specific user cart product
+        app.delete('/carts/:id', async (req, res) => {
+            const deletedId = req.params.id;
+            const query = { _id: new ObjectId(deletedId) };
+            const result = await cartsCollection.deleteOne(query);
+            res.send(result);
+        })
+
+
+
+//---------------------------------- cart related api----------------------
 
 
 
@@ -125,7 +188,7 @@ async function run() {
         //add a class
         app.post('/classes',async(req,res)=>{
             const newClass=req.body;
-            console.log(newClass);
+            // console.log(newClass);
             const result = await classesCollection.insertOne(newClass);
             res.send(result);
         })
@@ -133,7 +196,7 @@ async function run() {
 
         app.get('/classes/email', async (req, res) => {
             const email = req.query.email;
-            console.log(email);
+            // console.log(email);
             if (!email) {
                 res.send([]);
             }
@@ -245,6 +308,57 @@ async function run() {
 
 //----------------------------------manage user related api   end----------------------
 
+
+
+
+//-------------------payment-----------
+//payment api
+        //create payment intent
+        app.post('/create-payment-intent',async(req,res)=>{
+            const data=req.body;
+            console.log('data',data);
+            const total=data.total;
+            // const {total}=req.body;
+            // console.log('price is ',price);
+            const amount=total*100;
+            console.log(amount);
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                payment_method_types:['card']
+            });
+            res.send({
+                clientSecret:paymentIntent.client_secret,
+            })
+        })
+
+
+        //post payment info
+        app.post('/payments',async(req,res)=>{
+            const payment=req.body;
+            const insertResult=await paymentCollection.insertOne(payment);
+
+            //delete cart class
+            const query={_id:{$in : payment.cartClasses.map(id=>new ObjectId (id))}}
+            const deleteResult=await cartsCollection.deleteMany(query);
+            res.send({insertResult,deleteResult});
+        })
+
+        //get payment information
+        app.get('/payments/email', async (req, res) => {
+            const email = req.query.email;
+            // console.log(email);
+            if (!email) {
+                res.send([]);
+            }
+                //find multiple document
+                const options={
+                    sort:{'date':1}
+                }
+                const query = { email: email };
+                const result = await paymentCollection.find(query,options).toArray();
+                res.send(result);       
+        })
 
 
 
